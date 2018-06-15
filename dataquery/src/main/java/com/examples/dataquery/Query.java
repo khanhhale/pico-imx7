@@ -21,7 +21,7 @@ public class Query {
 		long averageRate=0;
 		long freq=0;
 		
-		String query = "#standardSQL\n  with temp as(SELECT ROW_NUMBER() OVER(ORDER BY publishTime) as rownum, wt.* FROM `cloud-iot-testing-185623.iot_bigdata_dataset1.weather` wt), average as(SELECT AVG(UNIX_MILLIS(tempcur.publishTime) - UNIX_MILLIS(tempprev.publishTime)) as time_gap_in_millisec from temp tempcur left join temp tempprev on tempcur.rownum = tempprev.rownum + 1 group by tempcur.rownum),\n" + 
+		String query = "#standardSQL\n  with temp as(SELECT ROW_NUMBER() OVER(ORDER BY publishTime) as rownum, wt.* FROM `cloud-iot-testing.iot.weather` wt), average as(SELECT AVG(UNIX_MILLIS(tempcur.publishTime) - UNIX_MILLIS(tempprev.publishTime)) as time_gap_in_millisec from temp tempcur left join temp tempprev on tempcur.rownum = tempprev.rownum + 1 group by tempcur.rownum),\n" + 
 				"message_table as(select AVG(UNIX_MILLIS(tempcur.publishTime) - UNIX_MILLIS(tempprev.publishTime)) as time_gap_in_millisec, MIN((UNIX_MILLIS(tempcur.publishTime) - UNIX_MILLIS(tempprev.publishTime))/@averageRate) as messages from temp tempcur left join temp tempprev on tempcur.rownum = tempprev.rownum + 1 group by tempcur.rownum order by tempcur.rownum)\n" + 
 				"select cast(round(time_gap_in_millisec) as int64) as time_gap_in_millisec, cast(round(messages) as int64) as messages from message_table where messages is not null and time_gap_in_millisec between @startTime and @endTime";
 		
