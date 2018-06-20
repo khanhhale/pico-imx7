@@ -20,20 +20,26 @@ public class Query {
 		long endTime=0;
 		long averageRate=0;
 		long freq=0;
+		long leeWay=0;
+		String messageType="event";
 		
-		String query = "#standardSQL\n  with temp as(SELECT ROW_NUMBER() OVER(ORDER BY publishTime) as rownum, wt.* FROM `cloud-iot-testing.iot.weather` wt), average as(SELECT AVG(UNIX_MILLIS(tempcur.publishTime) - UNIX_MILLIS(tempprev.publishTime)) as time_gap_in_millisec from temp tempcur left join temp tempprev on tempcur.rownum = tempprev.rownum + 1 group by tempcur.rownum),\n" + 
-				"message_table as(select AVG(UNIX_MILLIS(tempcur.publishTime) - UNIX_MILLIS(tempprev.publishTime)) as time_gap_in_millisec, MIN((UNIX_MILLIS(tempcur.publishTime) - UNIX_MILLIS(tempprev.publishTime))/@averageRate) as messages from temp tempcur left join temp tempprev on tempcur.rownum = tempprev.rownum + 1 group by tempcur.rownum order by tempcur.rownum)\n" + 
-				"select cast(round(time_gap_in_millisec) as int64) as time_gap_in_millisec, cast(round(messages) as int64) as messages from message_table where messages is not null and time_gap_in_millisec between @startTime and @endTime";
+		String query = "#standardSQL\n  with temp as(SELECT ROW_NUMBER() OVER(ORDER BY publishTime) as rownum, wt.* FROM `cloud-iot-testing-185623.iot_bigdata_dataset1.weather` wt where wt.messageType=@messageType), average as(SELECT AVG(UNIX_MILLIS(tempcur.publishTime) - UNIX_MILLIS(tempprev.publishTime)) as time_gap_in_millisec from temp tempcur left join temp tempprev on tempcur.rownum = tempprev.rownum + 1 group by tempcur.rownum),\n" + 
+				"message_table as(select AVG(UNIX_MILLIS(tempcur.publishTime) - UNIX_MILLIS(tempprev.publishTime)) as time_gap_in_millisec, MIN((UNIX_MILLIS(tempcur.publishTime) - UNIX_MILLIS(tempprev.publishTime))/POW(@averageRate+@leeWay,2)) as messages from temp tempcur left join temp tempprev on tempcur.rownum = tempprev.rownum + 1 where tempcur.messageType=@messageType and tempprev.messageType=@messageType group by tempcur.rownum order by tempcur.rownum)\n" + 
+				"select cast(round(time_gap_in_millisec/(@averageRate+@leeWay)) as int64) as time_gap_in_millisec, cast(round(messages) as int64) as messages from message_table where messages is not null and time_gap_in_millisec between @startTime and @endTime\n";
 		
 		//M=millisecond, s = seconds, m=minutes, h=hours, d=days
 		try {
 			Duration startT = Query.durationParse(args[0]);
 			Duration endT = Query.durationParse(args[1]);
 			Duration averageR = Query.durationParse(args[2]);
+			Duration leeW = Query.durationParse(args[3]);
+		    messageType = args[4];
 
 			startTime = startT.getMillis();
 			endTime = endT.getMillis();
 			averageRate=averageR.getMillis();
+			leeWay=leeW.getMillis();
+			
 			
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
@@ -44,10 +50,12 @@ public class Query {
 				.addNamedParameter("averageRate", QueryParameterValue.int64(averageRate))
 				.addNamedParameter("startTime", QueryParameterValue.int64(startTime))
 				.addNamedParameter("endTime", QueryParameterValue.int64(endTime))
+				.addNamedParameter("leeWay", QueryParameterValue.int64(leeWay))
+				.addNamedParameter("messageType", QueryParameterValue.string(messageType))
 				.build();		
 		try {
 			try {
-				System.out.printf("%s per message \t Messages from averages rates\n", Query.timeStringParse(args[0]));
+				System.out.printf("%s per message     missing messages\n", Query.timeStringParse(args[0]));
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}
@@ -74,7 +82,7 @@ public class Query {
 				}
 				
 				
-		        System.out.printf("%d\t\t\t\t\t%d\n", freq, messages.getLongValue());
+		        System.out.printf("%d\t\t\t     %d\n", freq, messages.getLongValue());
 			}
 			
 		} catch (JobException e) {
