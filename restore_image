@@ -1,0 +1,74 @@
+How to restore the firmware if any modifications were done (windows pc needed) 
+
+A. Restore factory default settings
+
+===================================
+ 
+To restore your PICO-PI-IMX7D to the default settings follow instructions below.
+
+If your board is already (still) using default settings, skip ahead to section B.
+
+
+Step 1.
+
+Download NXP Mfgtools from
+
+http://www.nxp.com/lgfiles/bsps/mfgtools.zip
+
+
+and the factory default bootloader from
+
+http://download.technexion.net/files/androidthings/u-boot.imx
+
+
+Step 2
+
+Extract Mfgtools onto a Windows computer. Inside the Mfgtools folder, place the downloaded u-boot.imx file in Profiles\Linux\OS Firmware\files\brillo\pico_imx7d replacing any u-boot.imx already there (if there is one).
+
+
+Step 3
+
+Then set the boot jumpers on your board to serial download mode, as described inhttp://www.nxp.com/assets/documents/data/en/user-guides/PICO-IMX7D-USG.pdf
+
+(or http://www.nxp.com/assets/documents/data/en/quick-start-guide/PICO-iMX7D-QSG.pdf )
+
+
+Step 4
+
+Attach your board with a USB type C cable to a USB host port on your computer.
+
+Execute the VBS script
+
+mfgtool2-brillo-mx7d-pico-emmc-firmware.vbs
+
+by double clicking on it (located in the Mfgtools folder).
+
+
+Step 5
+
+Mfgtools starts, and should indicate that there is a HID device attached.
+
+Press start, and wait. The install happens in two steps, and do not detach your board or stop it until there is a green status bar and a "done" message.
+
+
+Step 6
+
+Detach the board, set the boot jumpers to emmc boot mode, and reattach the board. "fastboot devices" command should list a fastboot device.
+
+
+Your board is now in factory default mode.
+
+
+On the debug console, it might notify about a missing misc partition etc, but these are not a critical problems. Just proceed.
+
+
+B. Install Android Things
+
+=========================
+
+
+To install Android things, follow the instructions at https://developer.android.com/things/hardware/imx7d.html
+
+ Note: linux users might need an even newer fastboot version than listed in the instructions. If the command "fastboot --version" fails, your version is probably too old.
+
+ The latest linux version of fastboot can be downloaded from https://dl.google.com/android/repository/platform-tools-latest-linux.zip
