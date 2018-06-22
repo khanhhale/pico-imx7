@@ -13,12 +13,12 @@ Step 1.
 
 Download NXP Mfgtools from
 
-http://www.nxp.com/lgfiles/bsps/mfgtools.zip
+https://github.com/khanhhale/pico-imx7/blob/master/mfgtools.zip
 
 
 and the factory default bootloader from
 
-http://download.technexion.net/files/androidthings/u-boot.imx
+https://github.com/khanhhale/pico-imx7/blob/master/u-boot.imx
 
 
 Step 2
