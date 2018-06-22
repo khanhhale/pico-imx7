@@ -23,9 +23,9 @@ public class Query {
 		long leeWay=0;
 		String messageType="event";
 		
-		String query = "#standardSQL\n  with temp as(SELECT ROW_NUMBER() OVER(ORDER BY publishTime) as rownum, wt.* FROM `cloud-iot-testing-185623.iot_bigdata_dataset1.weather` wt where wt.messageType=@messageType), average as(SELECT AVG(UNIX_MILLIS(tempcur.publishTime) - UNIX_MILLIS(tempprev.publishTime)) as time_gap_in_millisec from temp tempcur left join temp tempprev on tempcur.rownum = tempprev.rownum + 1 group by tempcur.rownum),\n" + 
-				"message_table as(select AVG(UNIX_MILLIS(tempcur.publishTime) - UNIX_MILLIS(tempprev.publishTime)) as time_gap_in_millisec, MIN((UNIX_MILLIS(tempcur.publishTime) - UNIX_MILLIS(tempprev.publishTime))/POW(@averageRate+@leeWay,2)) as messages from temp tempcur left join temp tempprev on tempcur.rownum = tempprev.rownum + 1 where tempcur.messageType=@messageType and tempprev.messageType=@messageType group by tempcur.rownum order by tempcur.rownum)\n" + 
-				"select cast(round(time_gap_in_millisec/(@averageRate+@leeWay)) as int64) as time_gap_in_millisec, cast(round(messages) as int64) as messages from message_table where messages is not null and time_gap_in_millisec between @startTime and @endTime\n";
+		String query = "#standardSQL\n  with temp as(SELECT ROW_NUMBER() OVER(ORDER BY publishTime) as rownum, wt.* FROM `cloud-iot-testingf.iot_bigdata_dataset1.weather` wt where wt.messageType=@messageType),\n" + 
+				"message_table as(select AVG(UNIX_MILLIS(tempcur.publishTime) - UNIX_MILLIS(tempprev.publishTime)) as time_gap_in_millisec, AVG(UNIX_MILLIS(tempcur.publishTime) - UNIX_MILLIS(tempprev.publishTime) - (@averageRate+@leeWay)) as messages from temp tempcur left join temp tempprev on tempcur.rownum = tempprev.rownum + 1 where tempcur.messageType=@messageType and tempprev.messageType=@messageType group by tempcur.rownum order by tempcur.rownum)\n" + 
+				"select cast(round(time_gap_in_millisec) as int64) as time_gap_in_millisec, cast(round(messages/(@averageRate+@leeWay)) as int64) as missingMessages from message_table where messages is not null and time_gap_in_millisec between @startTime and @endTime\n";
 		
 		//M=millisecond, s = seconds, m=minutes, h=hours, d=days
 		try {
@@ -39,6 +39,8 @@ public class Query {
 			endTime = endT.getMillis();
 			averageRate=averageR.getMillis();
 			leeWay=leeW.getMillis();
+			
+		    System.out.printf("%d\t%d\t%d\t%d\n", startTime, endTime, averageRate, leeWay);
 			
 			
 		} catch (Exception e1) {
